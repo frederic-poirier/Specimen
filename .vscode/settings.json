@@ -1,0 +1,15 @@
+{
+  "files.exclude": {
+    "frontend\\node_modules": true,
+    "frontend/.gitignore": true,
+    "frontend/node_modules": true,
+    "frontend/package-lock.json": true,
+    "frontend/package.json": true,
+    "frontend/README.md": true,
+    ".vscode": true,
+    "frontend\\vite.config.js": true,
+    ".venv": true,
+    "backend\\__pycache__": true,
+    "backend\\core\\__pycache__": true
+  }
+}

@@ -1,0 +1,188 @@
+/* 1. Use a more-intuitive box-sizing model */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 2. Remove default margin */
+* {
+  margin: 0;
+}
+
+/* 3. Enable keyword animations */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    interpolate-size: allow-keywords;
+  }
+}
+
+body {
+  /* 4. Add accessible line-height */
+  line-height: 1.5;
+  /* 5. Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 6. Improve media defaults */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* 7. Inherit fonts for form controls */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 8. Avoid text overflows */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+/* 9. Improve line wrapping */
+p {
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+
+/* 10. Create a root stacking context */
+#root,
+#__next {
+  isolation: isolate;
+}
+
+:root {
+  font-family: Inter, sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: InterVariable, sans-serif;
+  }
+}
+
+:root {
+  --gray-0: hsl(0 0% 99%);
+  --gray-1: hsl(0 0% 96%);
+  --gray-2: hsl(0 0% 92%);
+  --gray-3: hsl(0 0% 80%);
+  --gray-4: hsl(0 0% 60%);
+  --gray-5: hsl(0 0% 40%);
+  --gray-6: hsl(0 0% 20%);
+
+  --bg: var(--gray-0);
+  --surface: var(--gray-1);
+  --muted: var(--gray-3);
+  --text: var(--gray-6);
+  --subtle: var(--gray-5);
+  --emphasis: var(--gray-4);
+
+  --warning-bg: hsl(45 100% 95%);
+  --warning-content: hsl(45 100% 40%);
+  --action-content: hsl(220 90% 40%);
+  --action-bg: hsl(220 90% 90%);
+
+  --border: var(--gray-2);
+  --border-subtle: var(--gray-1);
+
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gray-0: hsl(210 8% 6%);
+    --gray-1: hsl(210 7% 12%);
+    --gray-2: hsl(210 6% 18%);
+    --gray-3: hsl(210 6% 28%);
+    --gray-4: hsl(210 5% 44%);
+    --gray-5: hsl(210 6% 66%);
+    --gray-6: hsl(210 8% 92%);
+
+    --bg: var(--gray-0);
+    --surface: var(--gray-1);
+    --muted: var(--gray-3);
+    --text: var(--gray-6);
+    --subtle: var(--gray-5);
+    --emphasis: var(--gray-4);
+
+    --warning-bg: hsl(45 100% 12%);
+    --warning-content: hsl(45 100% 65%);
+
+    --border: var(--gray-2);
+    --border-subtle: var(--gray-1);
+  }
+}
+
+/* Apply neutral root visuals */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  -webkit-font-smoothing: antialiased;
+}
+
+.warning {
+  color: var(--warning-content);
+
+  svg {
+    fill: var(--warning-content);
+    color: var(--warning-content);
+  }
+}
+
+main {
+  margin: 3rem auto;
+  width: min(800px, calc(100% - 2rem));
+}
+
+p {
+  font-size: var(--font-size-sm);
+  color: var(--subtle);
+  text-wrap: pretty;
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+h5 {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+svg {
+  fill: var(--subtle);
+}
+
+::placeholder, button:disabled {
+  color: var(--muted);
+  background-color: var(--gray-1);
+}
