@@ -36,3 +36,7 @@
 .tab-switch:has(label:nth-child(2) input:checked)::after {
     transform: translateX(calc(100% - 0.5rem));
 }
+
+.tab-switch:focus-within:after {
+    outline: 2px solid var(--gray-6);
+}

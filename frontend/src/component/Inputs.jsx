@@ -1,5 +1,5 @@
 import { createSignal, For } from "solid-js";
-import "./inputs.css"
+import "../styles/inputs.css"
 
 export function Tabs(props) {
   const [selected, setSelected] = createSignal(props.initial || props.tabs[0]);

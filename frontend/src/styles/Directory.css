@@ -1,0 +1,204 @@
+.directory-panel {
+    max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+#directory-panel-form:popover-open {
+    background-color: var(--gray-0);
+    color: var(--text);
+    border: 1px solid var(--gray-2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    border-radius: 1rem;
+    padding: 0;
+    margin: auto;
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    &::backdrop {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    header {
+        padding: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--gray-2);
+
+        h5 {
+            margin: 0;
+            padding-left: 0.5rem;
+        }
+    }
+
+
+    input {
+        background: none;
+        color: var(--text);
+    }
+
+    span:empty {
+        display: none;
+    }
+
+    fieldset {
+        border-radius: 0.5rem;
+        outline: 1px solid var(--gray-2);
+        border: none;
+        background-color: var(--gray-1);
+        display: flex;
+        padding: 0;
+        width: 100%;
+        height: 2.5rem;
+    }
+
+    fieldset:focus-within {
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 0 0 3px var(--muted);
+    }
+
+    label:has(> input[type="text"]) {
+        cursor: text;
+        position: relative;
+        display: flex;
+        align-items: center;
+
+        button {
+            anchor-name: --manual-path-error;
+            height: 100%;
+            border-radius: 0 0.5rem 0.5rem 0;
+            aspect-ratio: 1;
+            display: flex;
+            place-content: center;
+        }
+
+        #manual-path-error:popover-open {
+            --bg: var(--gray-6);
+            --border: var(--gray-3);
+
+            position-anchor: --manual-path-error;
+            inset: unset;
+            bottom: anchor(top);
+            right: anchor(right);
+            transform: translateX(0.25rem) translateY(-0.25rem);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: var(--font-size-sm);
+            color: var(--gray-2);
+            background-color: var(--bg);
+            padding: 0.25rem 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: visible;
+
+            &::after {
+                content: "";
+                background-image: linear-gradient(135deg, transparent 50%, var(--bg) 50%);
+                height: 1rem;
+                width: 1rem;
+                position: absolute;
+                bottom: -0.5rem;
+                right: 1rem;
+                transform: rotate(45deg) translateY(-0.5px);
+                border-bottom: 1px solid var(--border);
+                border-right: 1px solid var(--border);
+                border-bottom-right-radius: 0.125rem;
+            }
+        }
+
+
+        &:has(> #manual-path-error:popover-open) {
+            button {
+                background-color: var(--gray-3);
+            }
+        }
+
+    }
+
+    input[type="text"] {
+        border: none;
+        height: 100%;
+        width: 100%;
+        padding-inline: 0.75rem;
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+    label:has(> input[type="file"]) {
+        cursor: pointer;
+        border-right: 1px solid var(--gray-2);
+        border-radius: 0.5rem 0 0 0.5rem;
+        place-content: center;
+        aspect-ratio: 1;
+
+        svg {
+            margin: auto;
+        }
+
+        &:hover,
+        &:focus-within {
+            background-color: var(--gray-2);
+        }
+
+        &:focus-within {
+            outline: 2px solid var(--gray-6);
+            z-index: 1;
+        }
+    }
+
+    input[type="file"] {
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+}
+
+
+.directory-panel-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--gray-2);
+    border-radius: 0.5rem;
+
+    li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem;
+
+        &:not(:last-child) {
+            border-bottom: 1px solid var(--gray-2);
+        }
+
+        h3 {
+            margin: 0;
+            font-weight: 400;
+            font-size: var(--font-size-base);
+            color: var(--text);
+            padding: 0.25rem 0.5rem;
+        }
+    }
+}
+
+.directory-panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.directory-panel-manual {
+    display: flex;
+    gap: 0.5rem;
+}

@@ -1,6 +1,5 @@
-import DirectoryInput from './DirectoryInput';
-import HelloFetcher from './HelloFetcher';
-import "./index.css"
+import DirectoryInput from './features/Directory';
+import "./styles/index.css"
 
 function App() {
   return (
