@@ -41,6 +41,7 @@ class Font(Base):
 
     # Gestion
     representative = Column(Boolean, default=False)  # un seul true par famille
+    
     status = Column(String, default="ok")
     last_scan = Column(DateTime(timezone=True), default=lambda: datetime.now(tz=timezone.utc))
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(tz=timezone.utc))

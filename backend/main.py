@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from backend.core.db import Base, engine
 # Ensure models are imported before create_all so tables exist
 from backend.models import folder as _folder_model  # noqa: F401
@@ -9,5 +10,6 @@ from backend.api import scan as scan_api
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Fontbase API")
+app.mount("/api/fonts", StaticFiles(directory="C:\\Users\\fredm\\Code\\Specimen\\backend\\subset"), name="fonts")
 app.include_router(folders.router, prefix="/api")
 app.include_router(scan_api.router)
