@@ -41,3 +41,39 @@ def list_representative_fonts(db: Session = Depends(get_db)):
         for f in reps
     ]
 
+
+@router.get("/fonts/family/{font_id}")
+def list_family(font_id: int, db: Session = Depends(get_db)):
+    # Find the clicked font to identify its normalized family
+    font = db.query(Font).filter_by(id=font_id).first()
+    if not font:
+        raise HTTPException(status_code=404, detail="Font not found")
+
+    fam_norm = font.family_normalized
+    if not fam_norm:
+        # Fallback: return just the single font if no family info available
+        return [{
+            "id": font.id,
+            "family": font.family,
+            "full_name": font.full_name,
+            "style_name": font.style_name,
+            "path": font.path,
+        }]
+
+    members = (
+        db.query(Font)
+        .filter_by(family_normalized=fam_norm)
+        .order_by(Font.full_name.asc())
+        .all()
+    )
+    return [
+        {
+            "id": f.id,
+            "family": f.family,
+            "full_name": f.full_name,
+            "style_name": f.style_name,
+            "path": f.path,
+            "representative": f.representative,
+        }
+        for f in members
+    ]

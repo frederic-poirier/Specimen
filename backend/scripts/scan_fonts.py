@@ -50,18 +50,6 @@ def scan_fonts_to_db(db: Session, input_path: Path):
                     db.commit()
 
     db.commit()
+    group_fonts(db)
     print(f"[OK] Scan termine: {count} nouvelles polices ajoutees.")
-
-
-if __name__ == "__main__":
-    folder = Path(r"C:\\Users\\fredm\\Font\\Other")
-    if not folder.exists():
-        print(f"[!] Le dossier {folder} est introuvable.")
-        raise SystemExit(1)
-
-    with SessionLocal() as db:
-        scan_fonts_to_db(db, folder)
-        print("[..] Regroupement des familles en cours...")
-        group_fonts(db)
-        print("[OK] Regroupement termine.")
 
