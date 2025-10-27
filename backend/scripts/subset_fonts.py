@@ -1,5 +1,6 @@
 from fontTools.ttLib import TTFont
 from fontTools import subset
+from fontTools.varLib import instancer
 from pathlib import Path
 
 SUBSET_FOLDER = Path("../subset")
@@ -14,7 +15,7 @@ PREVIEW_TEXT = (
     " .,:;!?\"'()[]{}<>-–—_@&%*/\\+=#"
 )
 
-def open_font(path: Path):
+def open_font(path: Path) -> TTFont:
     suffix = path.suffix.lower()
     if suffix == ".woff":
         return TTFont(path, flavor="woff")
@@ -22,14 +23,33 @@ def open_font(path: Path):
         return TTFont(path, flavor="woff2")
     return TTFont(path)
 
-def make_subset(path: Path) -> Path | None:
-    try:
-        output_path = SUBSET_FOLDER / f"{path.stem}.woff2"
-        if output_path.exists() and output_path.stat().st_mtime > path.stat().st_mtime:
-            return output_path
+def is_variable_font(font: TTFont) -> bool:
+    return "fvar" in font
 
+def instantiate_variable_font(font: TTFont) -> TTFont:
+    # On récupère les axes disponibles
+    axes = font["fvar"].axes
+    # On choisit la valeur par défaut pour chaque axe
+    instance_coords = {axis.axisTag: axis.defaultValue for axis in axes}
+
+    # Instanciation en place
+    instancer.instantiateVariableFont(font, instance_coords, inplace=True)
+    return font
+
+def make_subset(path: Path) -> Path | None:
+    output_path = SUBSET_FOLDER / f"{path.stem}.woff2"
+    if output_path.exists() and output_path.stat().st_mtime > path.stat().st_mtime:
+        return output_path
+
+    font = None
+    try:
         font = open_font(path)
 
+        # Étape variable → statique si nécessaire
+        if is_variable_font(font):
+            font = instantiate_variable_font(font)
+
+        # Options de sous-setting
         options = subset.Options()
         options.flavor = "woff2"
         options.with_zopfli = True
@@ -39,6 +59,7 @@ def make_subset(path: Path) -> Path | None:
         options.drop_tables += ['STAT', 'MVAR', 'HVAR', 'fvar']
         options.recalc_timestamp = False
 
+        # Exécution du subset
         subsetter = subset.Subsetter(options=options)
         subsetter.populate(text=PREVIEW_TEXT)
         subsetter.subset(font)
@@ -51,8 +72,8 @@ def make_subset(path: Path) -> Path | None:
         return None
 
     finally:
-        try:
-            font.close()
-        except Exception:
-            pass
-
+        if font:
+            try:
+                font.close()
+            except Exception:
+                pass

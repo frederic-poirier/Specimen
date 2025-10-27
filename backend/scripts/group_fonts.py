@@ -2,7 +2,9 @@ from sqlalchemy.orm import Session
 from difflib import SequenceMatcher
 from collections import defaultdict
 from typing import Dict, List
+from pathlib import Path
 from backend.models.font import Font
+from backend.scripts.subset_representatives import make_subset
 
 MATCHING_THRESHOLD = 0.8
 GLYPH_TOLERANCE = 0.1  
@@ -123,6 +125,14 @@ def assign_representative_family(db: Session, families: Dict[str, list[Font]]):
             f.family = representative_family_name
             f.family_normalized = family_name
             f.representative = (f.id == representative_font.id)
+
+        # Ensure a subset is generated for the chosen representative
+        try:
+            if representative_font.path:
+                make_subset(Path(representative_font.path))
+        except Exception as _e:
+            # Keep grouping robust even if subsetting fails
+            pass
 
     db.commit()
 

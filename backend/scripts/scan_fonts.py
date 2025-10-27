@@ -11,6 +11,7 @@ from backend.scripts.extract_metadata import extract_metadata
 FONT_EXTENSIONS = [".ttf", ".otf", ".woff", ".woff2"]
 
 
+
 def scan_fonts_to_db(db: Session, input_path: Path):
     count = 0
     # Track seen sha1s to avoid duplicate inserts within the same batch

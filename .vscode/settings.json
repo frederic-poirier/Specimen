@@ -6,10 +6,13 @@
     "frontend/package-lock.json": true,
     "frontend/package.json": true,
     "frontend/README.md": true,
-    ".vscode": true,
-    "frontend\\vite.config.js": true,
-    ".venv": true,
     "backend\\__pycache__": true,
-    "backend\\core\\__pycache__": true
+    "backend\\core\\__pycache__": true,
+    ".venv": true,
+    ".vscode": true,
+    "front/node_modules": true,
+    "front/package-lock.json": true,
+    "front/package.json": true,
+    "front/vite.config.js": true
   }
 }
