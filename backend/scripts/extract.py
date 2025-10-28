@@ -1,4 +1,5 @@
 from fontTools.ttLib import TTFont
+from lxml import etree
 from pathlib import Path
 from hashlib import sha1
 import re
@@ -22,7 +23,7 @@ PREFERRED_PLATFORM_IDS = [3, 1, 0]
 PREFERRED_LANG_IDS = [0x0409, 0x0000, 0x040C, 0x0407]
 
 
-def extract_metadata(font_path: Path) -> dict | None:
+def extract(font_path: Path) -> dict | None:
     try:
         try:
             font = TTFont(font_path)
@@ -31,7 +32,13 @@ def extract_metadata(font_path: Path) -> dict | None:
             if suffix == ".woff":
                 font = TTFont(font_path, flavor="woff")
             elif suffix == ".woff2":
-                font = TTFont(font_path, flavor="woff2")
+                try:
+                    font = TTFont(font_path, flavor="woff2")
+                except ModuleNotFoundError:
+                    print("The WOFF2 decoder requires the 'brotli' Python package (pip install brotli or brotlicffi)")
+                    return None
+            elif suffix == ".svg":
+                return extract_svg_font(font_path)
             else:
                 print(f"[discard] Unsupported font type: {font_path}")
                 return None
@@ -137,6 +144,56 @@ def extract_metadata(font_path: Path) -> dict | None:
 
     except Exception as e:
         print(f"[error] Failed to extract {font_path}: {e}")
+        return None
+
+def extract_svg_font(font_path: Path) -> dict | None:
+    try:
+        data = font_path.read_bytes()
+        sha = sha1(data).hexdigest()
+        tree = etree.fromstring(data)
+
+        # Recherche du <font> node
+        font_el = tree.find(".//{http://www.w3.org/2000/svg}font")
+        if font_el is None:
+            print(f"[discard] No <font> element in {font_path}")
+            return None
+
+        font_face = font_el.find("{http://www.w3.org/2000/svg}font-face")
+        family_name = font_face.get("font-family") if font_face is not None else "Unknown"
+        style_name = font_face.get("font-style") if font_face is not None else None
+        weight = font_face.get("font-weight") if font_face is not None else None
+
+        # Normalisation
+        family_normalized = normalize_name(family_name)
+
+        return {
+            "path": str(font_path),
+            "sha1": sha,
+            "format": "svg",
+            "family": family_name,
+            "family_normalized": family_normalized,
+            "full_name": family_name,
+            "style_name": style_name,
+            "license": None,
+            "vendor": None,
+            "panose": None,
+            "code_page1": None,
+            "code_page2": None,
+            "glyph_count": 0,  # optionnel, SVG fonts ne sont pas structurées pareil
+            "weight_class": weight,
+            "width_class": None,
+            "units_per_em": None,
+            "ascender": None,
+            "descender": None,
+            "line_gap": None,
+            "x_height": None,
+            "cap_height": None,
+            "italic_angle": None,
+            "representative": False
+        }
+
+    except Exception as e:
+        print(f"[error] Failed to extract SVG {font_path}: {e}")
         return None
 
 

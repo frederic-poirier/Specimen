@@ -68,40 +68,18 @@ export function useDirectory() {
   const submitPath = async (event) => {
     event.preventDefault();
     const status = pathStatus();
-
     if (!status.valid || !status.path) return;
 
-    const tempId = `temp-${crypto.randomUUID()}`;
-    const optimisticItem = {
-      id: tempId,
-      path: status.path,
-      file_count: 0,
-      status: "idle",
-    };
-
-    mutate((current = []) => [...current, optimisticItem]);
-
     try {
-      const response = await fetch(
-        `/api/folders/?path=${encodeURIComponent(status.path)}`,
-        {
-          method: "POST",
-        }
-      );
-      if (!response.ok) throw new Error("failed to submit the path");
-      const savedItem = await response.json();
-
-      mutate((current = []) =>
-        current.map((item) => (item.id === tempId ? savedItem : item))
-      );
-
+      const response = await fetch(`/scan/path?path=${encodeURIComponent(status.path)}`);
+      if (!response.ok) throw new Error("failed to trigger scan");
+    } catch (err) {
+      console.error(err);
+    } finally {
       if (typeof event.currentTarget?.reset === "function") {
         event.currentTarget.reset();
       }
       setPathStatus({ valid: false, error: "empty", path: "" });
-    } catch (err) {
-      console.error(err);
-      mutate((current = []) => current.filter((item) => item.id !== tempId));
     }
   };
 

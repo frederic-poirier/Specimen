@@ -228,3 +228,8 @@ button:has( > svg:only-child) {
 }
 
 
+.virtual-list {
+  height: 300px;
+  overflow-y: scroll;
+  padding-bottom: 1rem;
+}

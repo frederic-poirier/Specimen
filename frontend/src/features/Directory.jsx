@@ -9,10 +9,6 @@ export default function Directory() {
 
   return (
     <section className="directory-panel">
-      <Show when={path.loading}>Chargement</Show>
-      <Show when={path.error}>erreur</Show>
-      <Show when={path()}>
-        <>
           <DirectoryHeader />
           <DirectoryList path={path() ?? []} onDelete={delPath} />
           <DirectoryForm
@@ -20,8 +16,6 @@ export default function Directory() {
             validatePath={validatePath}
             submitPath={submitPath}
           />
-        </>
-      </Show>
     </section>
   );
 }
@@ -143,3 +137,4 @@ function DirectoryForm(props) {
     </>
   );
 }
+

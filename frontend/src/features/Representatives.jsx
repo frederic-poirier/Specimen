@@ -1,5 +1,24 @@
-import { createResource, Show, createSignal, createMemo } from "solid-js";
-import { VirtualList } from "@solid-primitives/virtual";
+import { createResource, createSignal, createMemo, onMount, onCleanup, Show, For, createRenderEffect, } from "solid-js";
+import "../styles/representatives.css"
+
+const loadedFonts = new Set();
+
+async function loadFont(font) {
+  if (!font || loadedFonts.has(font)) return;
+  if (typeof document === "undefined" || typeof FontFace === "undefined") return;
+  try {
+    if (document.fonts && document.fonts.check(`1em "${font}"`)) {
+      loadedFonts.add(font);
+    }
+  } catch {
+    throw new Error("pas de fetch")
+  }
+
+  const face = new FontFace(font, `url(/api/fonts/${font.replaceAll(" ", "-")}.woff2)`);
+  await face.load();
+  document.fonts?.add(face);
+  loadedFonts.add(font);
+}
 
 async function fetchRepresentatives() {
   const res = await fetch("/fonts/representative", { cache: "no-store" });
@@ -7,100 +26,177 @@ async function fetchRepresentatives() {
   return res.json();
 }
 
+async function fetchFamily(family) {
+  if (!family.id) return
+  const res = await fetch(`/fonts/family/${family.id}`)
+  if (!res.ok) throw new Error("failed to load family content")
+  return res.json()
+}
+
 export default function Representatives() {
-  const [representatives] = createResource(fetchRepresentatives);
+  const [family, setFamily] = createSignal(null);
   const [search, setSearch] = createSignal("");
+  const [text, setText] = createSignal("The quick brown fox jumps over the lazy dogs")
+  const [familyData] = createResource(family, fetchFamily)
+  const [representatives] = createResource(fetchRepresentatives);
+  let time
 
-  // Track which families were loaded to avoid re-loading
-  const [loadedFamilies, setLoadedFamilies] = createSignal(new Set());
+  function handleQuery(value) {
+    if (time) clearTimeout(time)
+    time = setTimeout(() => setSearch(value), 100);
+  }
 
-  const ensureFontLoaded = async (rep) => {
-    if (!rep) return;
-    const fam = rep.family || rep.full_name;
-    if (!fam) return;
+  const filteredFonts = createMemo(() => {
+    const data = representatives() ?? [];
+    const term = search().trim().toLowerCase();
+    if (!term) return data;
+    return data.filter((font) => font.name.toLowerCase().includes(term));
+  });
 
-    const loaded = loadedFamilies();
-    if (loaded.has(fam)) return;
 
-    try {
-      const filename = (rep.path?.split(/[\\\/]/).pop() || "");
-      const base = filename.replace(/\.[^.]+$/, "");
-      const url = `/api/fonts/${encodeURI(base)}.woff2`;
-      const face = new FontFace(fam, `url(${url})`);
-      const loadedFace = await face.load();
-      document.fonts.add(loadedFace);
-      const next = new Set(loaded);
-      next.add(fam);
-      setLoadedFamilies(next);
-    } catch (_e) {
-      // ignore load errors to keep the UI responsive
+  return (
+    <section id="font-viewer">
+      <input
+        type="search"
+        placeholder="Search fonts..."
+        onInput={(event) => handleQuery(event.currentTarget.value)}
+      />
+      <Show when={!representatives.error} fallback={<p style={{ color: "var(--danger-6)" }}>Unable to load fonts.</p>}>
+        <Show when={!representatives.loading} fallback={<p>Loading fonts...</p>}>
+          <List
+            fonts={filteredFonts()}
+            buffer={3}
+            onSelect={(data) => setFamily(data)}
+            text={text}
+          />
+        </Show>
+      </Show>
+      <input
+        type="text"
+        name="Pangram"
+        id="Pangram"
+        placeholder="The quick brown fox jumps over the lazy dog"
+        onInput={(e) => setText(e.currentTarget.value)}
+      />
+      <section popover id="font-modal">
+        <Show when={!familyData.error} fallback="grosse erreur salllllllllll">
+          <Show when={!familyData.loading && family() !== null} fallback="chargementttttttttt">
+            <h1>{family().name}</h1>
+            <ul>
+              <For each={familyData()}>
+                {(font) => <li>{font.full_name}</li>}
+              </For>
+            </ul>
+          </Show>
+        </Show>
+
+      </section>
+    </section>
+  );
+}
+
+function List(props) {
+  const [itemHeight, setItemHeight] = createSignal(100)
+  const [containerHeight, setContainerHeight] = createSignal(0)
+  const [scroll, setScroll] = createSignal(0)
+  let containerREF
+
+
+  const visibleCount = createMemo(() => Math.ceil(containerHeight() / itemHeight()) + props.buffer * 2);
+  const startIndex = createMemo(() => Math.max(0, Math.floor(scroll() / itemHeight()) - props.buffer));
+  const endIndex = createMemo(() => Math.min(props.fonts.length, startIndex() + visibleCount()));
+  const visibleFonts = createMemo(() => props.fonts.slice(startIndex(), endIndex()));
+  const totalHeight = createMemo(() => props.fonts.length * itemHeight());
+
+
+  onMount(() => {
+    const resizeOBS = new ResizeObserver((entries) => {
+      const rect = entries[0].contentRect;
+      setContainerHeight(rect.height)
+    })
+    resizeOBS.observe(containerREF)
+    setContainerHeight(containerREF.clientHeight);
+    onCleanup(() => resizeOBS.disconnect())
+  })
+
+  const reportHeight = (h) => setItemHeight(h)
+  let ticking = false;
+  const handleScroll = (e) => {
+    const value = e.currentTarget.scrollTop;
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScroll(value);
+        ticking = false;
+      });
     }
   };
 
 
-  const filteredRepresentatives = createMemo(() => {
-    const reps = representatives() || [];
-    const q = (search() || "").trim().toLowerCase();
-    if (!q) return reps;
 
-    const filtered = reps.filter(f => {
-      const fam = (f.family || "").toLowerCase();
-      return fam.includes(q);
-    });
-    console.log(filtered)
-    return filtered;
-  });
+  function FontItem(props) {
+    let REF;
+    let mesured = false
+
+    onMount(() => {
+      if (!mesured && props.index === 0 && REF) {
+        const height = REF.getBoundingClientRect().height
+        props.reportHeight(height)
+        mesured = true;
+      }
+      const timer = setTimeout(() => void loadFont(props.font.name), 50)
+      onCleanup(() => clearTimeout(timer))
+    })
+
+    return (
+      <button
+        ref={REF}
+        className="ghost font-item"
+        popoverTarget="font-modal"
+        popoverTargetAction="show"
+        onClick={() => props.onSelect({id: props.font.id, name: props.font.name})}
+        style={{
+          position: "absolute",
+          top: `${props.top}px`,
+          left: 0,
+          right: 0,
+        }}
+      >
+        <p>{props.font.name}</p>
+        <h1
+          style={{
+            "font-family": `"${props.font.name}"`,
+          }}
+        >{props.text() || props.font.name}</h1>
+      </button>
+    )
+  }
 
   return (
-    <section style={{ padding: "1rem", width: "100%", margin: "0 auto" }}>
-      <h2>Representative Fonts</h2>
-      <input
-        type="search"
-        name="search"
-        id="search"
-        placeholder="Search families…"
-        value={search()}
-        onInput={(e) => setSearch(e.target.value)}
-        style={{ width: "100%", padding: "8px 10px", margin: "0 0 12px 0" }}
-      />
+    <div
+      className="virtual-list"
+      ref={containerREF}
+      onScroll={handleScroll}
+      style={{ position: "relative", "overflow-y": "auto", }}
+    >
+      <div style={{ height: `${totalHeight()}px`, position: "relative" }}>
+        <For each={visibleFonts()}>
+          {(font, i) => {
+            const idx = () => startIndex() + i()
+            return (
+              <FontItem
+                index={idx()}
+                font={font}
+                top={idx() * itemHeight()}
+                reportHeight={reportHeight}
+                onSelect={props.onSelect}
+                text={props.text}
+              />
+            )
+          }}
+        </For>
+      </div>
 
-      <Show when={!representatives.loading} fallback={<p>Loading…</p>}>
-        <Show when={!representatives.error} fallback={<p>Error loading representatives.</p>}>
-          <VirtualList
-            key={filteredRepresentatives().length}
-            each={filteredRepresentatives()}
-            rootHeight={560}
-            rowHeight={48}
-            overscanCount={10}
-            fallback={<div>No fonts</div>}
-          >
-            {(f) => {
-              // Kick off font loading when row renders (i.e., is visible)
-              ensureFontLoaded(f);
-              return (
-                <div
-                  style={{
-                    height: "3rem",
-                    display: "flex",
-                    "align-items": "center",
-                    padding: "16px",
-                    "font-family": f.family,
-                    "font-size": "2rem",
-                    "line-height": "3rem",
-                    width: "100%",
-                    "white-space": "nowrap",
-                    "overflow": "hidden",
-                    "text-overflow": "ellipsis",
-                  }}
-                  title={f.full_name || f.family}
-                >
-                  {f.family || f.full_name || "(Unnamed)"}
-                </div>
-              );
-            }}
-          </VirtualList>
-        </Show>
-      </Show>
-    </section>
-  );
+    </div>
+  )
 }
