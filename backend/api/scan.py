@@ -3,13 +3,15 @@ from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from fastapi.responses import StreamingResponse
+
 from sqlalchemy.orm import Session
+from sqlalchemy import func, distinct
+
 
 from backend.core.db import get_db, SessionLocal
 from backend.scripts.scan import scan
 from backend.models.font import Font, Family
 
-import time
 
 
 router = APIRouter()
@@ -27,20 +29,32 @@ def scan_path(
     scan(db, p)
  
 
+
 @router.get("/fonts/representative")
 def list_representative_fonts(db: Session = Depends(get_db)):
-    pairs = (
-        db.query(Family)
+    results = (
+        db.query(
+            Family.id,
+            Family.name,
+            func.count(Font.id).label("font_count"),
+            func.group_concat(distinct(Font.format)).label("extensions"),
+        )
+        .join(Font, Family.id == Font.family_id)
+        .group_by(Family.id, Family.name)
         .order_by(Family.name)
         .all()
     )
+
     return [
         {
-            "id": fam.id,
-            "name": fam.name
+            "id": r.id,
+            "name": r.name,
+            "font_count": r.font_count,
+            "extensions": sorted(set(filter(None, (r.extensions or "").split(","))))
         }
-        for (fam) in pairs
+        for r in results
     ]
+
 
 def _parse_since(s: str) -> datetime:
     try:

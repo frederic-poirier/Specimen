@@ -1,92 +1,95 @@
-import { createSignal, createMemo, onMount, For } from "solid-js";
+import { createSignal, createMemo, onCleanup, onMount, For } from "solid-js";
 
-export default function VirtualList(props) {
-    const ITEM_HEIGHT = props.itemHeight ?? 32; // hauteur fixe d'un item
-    const BUFFER = props.buffer ?? 10;          // nombre d’items en avance
+export default function List(props) {
+    const [itemHeight, setItemHeight] = createSignal(100)
+    const [containerHeight, setContainerHeight] = createSignal(0)
+    const [scroll, setScroll] = createSignal(0)
+    let containerREF
 
-    const [scrollTop, setScrollTop] = createSignal(0);
-    const [containerHeight, setContainerHeight] = createSignal(0);
-    let containerRef;
+    const padding = props.padding ?? 0;
+    const buffer = props.buffer ?? 2;
 
-    const totalCount = () => props.items.length;
-    const totalHeight = () => totalCount() * ITEM_HEIGHT;
 
-    // Nombre d'items visibles dans la fenêtre
-    const visibleCount = createMemo(() =>
-        Math.ceil(containerHeight() / ITEM_HEIGHT) + BUFFER
-    );
-
-    // Index de départ selon le scroll
-    const startIndex = createMemo(() =>
-        Math.max(0, Math.floor(scrollTop() / ITEM_HEIGHT) - BUFFER)
-    );
-
-    // Index de fin selon la fenêtre
-    const endIndex = createMemo(() =>
-        Math.min(totalCount(), startIndex() + visibleCount())
-    );
-
-    const visibleItems = createMemo(() =>
-        props.items.slice(startIndex(), endIndex())
-    );
-
-    const handleScroll = (e) => {
-        setScrollTop(e.currentTarget.scrollTop);
-    };
+    const visibleCount = createMemo(() => Math.ceil(containerHeight() / itemHeight()) + buffer * 2);
+    const startIndex = createMemo(() => Math.max(0, Math.floor((scroll() - padding) / itemHeight()) - buffer));
+    const endIndex = createMemo(() => Math.min(props.items.length, startIndex() + visibleCount()));
+    const visibleItems = createMemo(() => props.items.slice(startIndex(), endIndex()));
+    const totalHeight = createMemo(() => props.items.length * itemHeight() + (padding * 2));
 
     onMount(() => {
-        setContainerHeight(containerRef.clientHeight);
+        const resizeOBS = new ResizeObserver(([entry]) => {
+            setContainerHeight(entry.contentRect.height);
+            queueMicrotask(() => {
+                const firstItem = containerREF.querySelector(".list-item");
+                if (firstItem) {
+                    const rect = firstItem.getBoundingClientRect();
+                    if (rect.height > 0) setItemHeight(rect.height);
+                }
+            });
+        });
+
+        resizeOBS.observe(containerREF);
+        setContainerHeight(containerREF.clientHeight);
+
+        requestAnimationFrame(() => {
+            const firstItem = containerREF.querySelector(".list-item");
+            if (firstItem) {
+
+                const rect = firstItem.getBoundingClientRect();
+                console.log(firstItem, rect.height)
+
+                if (rect.height > 0) setItemHeight(rect.height);
+            }
+        });
+
+        onCleanup(() => resizeOBS.disconnect());
     });
+
+
+    let ticking = false;
+    const handleScroll = (e) => {
+        const value = e.currentTarget.scrollTop;
+        if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(() => {
+                setScroll(value);
+                ticking = false;
+            });
+        }
+    };
 
     return (
         <div
-            ref={(el) => (containerRef = el)}
+            className="virtual-list"
+            ref={containerREF}
             onScroll={handleScroll}
-            style={{
-                position: "relative",
-                overflow: "auto",
-                "max-height": "460px",
-                border: "1px solid #ccc",
-            }}
+            style={{ position: "relative", "overflow-y": "auto", }}
         >
-            {console.log(visibleItems())}
-
-            <div
-                style={{
-                    height: `${totalHeight()}px`,
-                    position: "relative",
-                }}
-            >
+            <div style={{ height: `${totalHeight()}px`, position: "relative" }}>
                 <For each={visibleItems()}>
                     {(item, i) => {
-                        const index = () => startIndex() + i();
+                        const idx = createMemo(() => startIndex() + i());
+                        const top = createMemo(() => idx() * itemHeight() + padding);
+
                         return (
                             <div
+                                class="list-item"
                                 style={{
                                     position: "absolute",
-                                    top: `${index() * ITEM_HEIGHT}px`,
-                                    height: `${ITEM_HEIGHT}px`,
+                                    top: `${top()}px`,
                                     left: 0,
                                     right: 0,
-                                    display: "flex",
-                                    "align-items": "center",
-                                    padding: "0 0.5rem",
                                 }}
                             >
-                                <FontItem font={item} />
+                                {props.children(item, idx())}
                             </div>
                         );
                     }}
                 </For>
-            </div>
-        </div>
-    );
-}
 
-export function FontItem(props) {
-    return (
-        <div style={{ "font-family": props.font.family }}>
-            {props.font.family}
+
+            </div>
+
         </div>
-    );
+    )
 }

@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from backend.core.db import Base, engine
 # Ensure models are imported before create_all so tables exist
