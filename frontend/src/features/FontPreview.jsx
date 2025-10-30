@@ -1,6 +1,9 @@
 import { createResource, createSignal, createMemo, onMount, onCleanup, Show, For, createRenderEffect, } from "solid-js";
-import { AlertIcon, LoadingIcon, RemoveIcon } from "../assets/icons";
+import { AlertIcon, DocumentSearchIcon, LoadingIcon, RemoveIcon } from "../assets/icons";
 import List from "../component/List";
+import { InputPath } from "../component/Inputs"
+import { useDirectory } from "../utils/useDirectory"
+import { useValidation } from "../utils/useValidation";
 import "../styles/FontPreview.css"
 
 const loadedFonts = new Set();
@@ -88,63 +91,115 @@ export default function FontPreview() {
     )
   }
 
+  function FontModal() {
+    return (
+      <section id="font-modal" popover className="modal">
+        <div className="font-modal-content">
+          <header>
+            <h5>{family()?.name}</h5>
+            <button popoverTarget="font-modal" className="ghost">
+              <RemoveIcon />
+            </button>
+          </header>
+          <ul>
+            <For each={familyData()}>
+              {(font) =>
+                <li><h1 style={{ "font-family": family().name }}>{font.full_name}</h1></li>
+              }
+            </For>
+          </ul>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section id="font-viewer">
       <Show when={!representatives.error} fallback={<ErrorPreview />}>
         <Show when={!representatives.loading} fallback={<LoadingPreview />}>
-          <List items={filteredFonts()} buffer={6} padding={48}>
-            {(item, index) => <FontItem item={item} index={index} />}
-          </List>
-          <input
-            type="search"
-            id="search"
-            placeholder="Search fonts..."
-            onInput={(event) => handleQuery(event.currentTarget.value)}
-          />
+          <Show when={representatives().length !== 0} fallback={<EmptyPreview />}>
+            <Show when={filteredFonts().length !== 0} fallback={<EmptySearch />}>
+              <List items={filteredFonts()} buffer={6} padding={48}>
+                {(item, index) => <FontItem item={item} index={index} />}
+              </List>
+            </Show>
+            <input
+              type="search"
+              id="font-search"
+              placeholder="Search fonts..."
+              onInput={(event) => handleQuery(event.currentTarget.value)}
+            />
+            <FontModal />
+          </Show>
         </Show>
       </Show>
-      <section id="font-modal" popover className="modal">
-        <Show when={familyData()}>
-          {console.log(familyData())}
-          <div className="font-modal-content">
-            <header>
-              <h5>{family().name}</h5>
-              <button popoverTarget="font-modal" className="ghost">
-                <RemoveIcon />
-              </button>
-            </header>
-            <ul>
-              <For each={familyData()}>
-                {(font) =>
-                  <li><h1 style={{ "font-family": family().name }}>{font.full_name}</h1></li>
-                }
-              </For>
-            </ul>
-          </div>
-        </Show>
-      </section>
     </section>
   );
 }
 
 function LoadingPreview() {
   return (
-    <div className="status">
+    <div className="status loading">
       <LoadingIcon />
-      <h5>Chargement des polices...</h5>
-      <p>Les échantillons de polices sont en cours de préparation. Veuillez patienter quelques instants.</p>
+      <h5>Chargement des polices…</h5>
+      <p>Les aperçus de polices sont en cours de préparation. Cette opération peut prendre quelques secondes.</p>
     </div>
-  )
+  );
 }
 
 function ErrorPreview() {
   return (
-    <div className="status">
+    <div className="status error">
       <AlertIcon />
-      <h5>Impossible de charger les polices</h5>
-      <p>Une erreur est survenue lors de la récupération des données.
-        Vérifiez votre connexion ou réessayez plus tard.</p>
+      <h5>Échec du chargement des polices</h5>
+      <p>Une erreur est survenue lors de la récupération des données. Vérifiez votre connexion ou réessayez plus tard.</p>
     </div>
-  )
+  );
+}
+
+function EmptyPreview() {
+  const { validator } = useDirectory();
+  const { status, validate } = useValidation(validator);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!status().valid) return;
+    await fetch(`/scan/path?path=${encodeURIComponent(status().value)}`);
+  };
+
+  return (
+    <div className="status empty">
+      <h5>Aucune police détectée</h5>
+      <p>
+        Aucune source de polices n’a encore été ajoutée. Vous pouvez :
+        spécifier un dossier manuellement via le champ ci-dessous,
+        glisser un dossier de polices directement dans la fenêtre,
+        ou lancer une analyse automatique.
+      </p>
+
+      <form onSubmit={handleSubmit} class="directory-panel-manual">
+        <InputPath status={status} onInput={validate} />
+        <button type="submit" disabled={!status().valid}>Ajouter</button>
+      </form>
+
+      <span className="or"><span>ou</span></span>
+
+      <button className="full-width">
+        <DocumentSearchIcon />
+        Analyser automatiquement
+      </button>
+    </div>
+  );
+}
+
+function EmptySearch() {
+  return (
+    <div className="status empty">
+      <h5>Aucune correspondance trouvée</h5>
+      <p>
+        Aucun résultat ne correspond à votre recherche. Essayez d’élargir vos critères
+        ou de modifier les filtres actifs.
+      </p>
+    </div>
+  );
 }

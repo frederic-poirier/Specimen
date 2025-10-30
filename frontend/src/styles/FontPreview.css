@@ -5,7 +5,7 @@
   padding-left: 1rem;
 
 
-  input {
+  #font-search {
     position: absolute;
     top: unset;
     bottom: 1rem;
@@ -24,6 +24,7 @@
     width: 100%;
     padding: 0.25rem;
     scrollbar-color: var(--gray-2) transparent;
+    transition: 0.25s all ease;
 
     --foreground: rgba(255, 255, 255, 1);
     --mask-height: 80px;
@@ -142,19 +143,21 @@
 
 
 
-html:has(:popover-open) {
+html:has(.modal:popover-open) {
   scrollbar-width: none;
 }
 
-body:not(:popover-open) {
+body:not(.modal:popover-open) {
   transform: scale(1);
   transform-origin: center;
   opacity: 1;
-  transition: 0.5s all cubic-bezier(0.075, 0.82, 0.165, 1);
+  transition:
+    0.5s opacity cubic-bezier(0.075, 0.82, 0.165, 1),
+    0.5s transform cubic-bezier(0.075, 0.82, 0.165, 1);
 
 }
 
-body:has(:popover-open) {
+body:has(.modal:popover-open) {
   transform: scale(0.9);
   transition: 0.5s all cubic-bezier(0.075, 0.82, 0.165, 1);
   opacity: 0.5;

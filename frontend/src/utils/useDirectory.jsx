@@ -1,86 +1,24 @@
-import { createResource, createSignal, onCleanup } from "solid-js";
-
-async function fetchPaths() {
-  const response = await fetch("/api/folders/");
-  if (!response.ok) throw new Error("failed to resolve path");
-  return response.json();
-}
+import { createResource } from "solid-js";
 
 export function useDirectory() {
-  const [pathStatus, setPathStatus] = createSignal({
-    valid: false,
-    error: "empty",
-    path: "",
+  const [paths, { mutate }] = createResource(async () => {
+    const res = await fetch("/api/folders/");
+    if (!res.ok) throw new Error("failed to resolve path");
+    return res.json();
   });
-  const [paths, { mutate }] = createResource(fetchPaths);
 
-  let timeoutID;
-  const clearValidationDebounce = () => {
-    if (timeoutID) {
-      clearTimeout(timeoutID);
-      timeoutID = undefined;
-    }
+  const pathAlreadyExists = (candidate) => {
+    return (paths() ?? []).some((p) => p.path === candidate);
   };
 
-  const pathAlreadyExists = (candidatePath) => {
-    const currentPaths = paths() ?? [];
-    return currentPaths.some((entry) => entry.path === candidatePath);
-  };
-
-  const validatePath = (candidatePath) => {
-    clearValidationDebounce();
-
-    const normalizedPath = (candidatePath ?? "").trim();
-
-    if (normalizedPath === "") {
-      setPathStatus({ valid: false, error: "empty", path: "" });
-      return;
+  const validator = async (path) => {
+    if (pathAlreadyExists(path)) {
+      return { valid: false, error: "Path already exists" };
     }
-
-    timeoutID = setTimeout(async () => {
-      if (pathAlreadyExists(normalizedPath)) {
-        setPathStatus({
-          valid: false,
-          error: "Path already saved",
-          path: normalizedPath,
-        });
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `/api/folders/validate?path=${encodeURIComponent(normalizedPath)}`
-        );
-        if (!response.ok) throw new Error("failed to validate");
-        const data = await response.json();
-        setPathStatus({ ...data, path: normalizedPath });
-      } catch (err) {
-        console.error(err);
-        setPathStatus({
-          valid: false,
-          error: "Validation failed",
-          path: normalizedPath,
-        });
-      }
-    }, 300);
-  };
-
-  const submitPath = async (event) => {
-    event.preventDefault();
-    const status = pathStatus();
-    if (!status.valid || !status.path) return;
-
-    try {
-      const response = await fetch(`/scan/path?path=${encodeURIComponent(status.path)}`);
-      if (!response.ok) throw new Error("failed to trigger scan");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (typeof event.currentTarget?.reset === "function") {
-        event.currentTarget.reset();
-      }
-      setPathStatus({ valid: false, error: "empty", path: "" });
-    }
+    const res = await fetch(`/api/folders/validate?path=${encodeURIComponent(path)}`);
+    if (!res.ok) return { valid: false, error: "Server error" };
+    const data = await res.json();
+    return { valid: data.valid, error: data.error };
   };
 
   const delPath = async (id) => {
@@ -106,13 +44,5 @@ export function useDirectory() {
     }
   };
 
-  onCleanup(clearValidationDebounce);
-
-  return {
-    path: paths,
-    pathStatus,
-    validatePath,
-    submitPath,
-    delPath,
-  };
+  return { paths, validator, delPath };
 }

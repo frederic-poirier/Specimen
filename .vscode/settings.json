@@ -13,6 +13,8 @@
     "front/node_modules": true,
     "front/package-lock.json": true,
     "front/package.json": true,
-    "front/vite.config.js": true
+    "front/vite.config.js": true,
+    ".gitignore": true,
+    "frontend\\vite.config.js": true
   }
 }

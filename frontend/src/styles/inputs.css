@@ -1,3 +1,15 @@
+input.invisible {
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+input.ghost,
+input.invisible {
+    border: none;
+    background: none;
+}
+
 .tab-switch {
     background-color: var(--gray-1);
     position: relative;
@@ -5,12 +17,6 @@
     padding: 0.25rem;
     border-radius: 0.75rem;
     width: 100%;
-
-    input[type="radio"] {
-        width: 0;
-        height: 0;
-        position: absolute;
-    }
 
     label {
         flex: 1 1 100%;
@@ -29,7 +35,7 @@
     left: 0.25rem;
     bottom: 0.25rem;
     border-radius: 0.5rem;
-    width: 50%;    
+    width: 50%;
     transition: 0.25s transform cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
@@ -39,4 +45,93 @@
 
 .tab-switch:focus-within:after {
     outline: 2px solid var(--gray-6);
+}
+
+
+.input-path {
+    border: 1px solid var(--gray-2);
+    background-color: var(--gray-1);
+    padding: 0;
+    border-radius: 0.5rem;
+    display: flex;
+    width: 100%;
+
+    label:first-of-type {
+        padding: 0.5rem;
+        border-right: 1px solid var(--gray-2);
+
+        &:focus-within {
+            background-color: var(--gray-1);
+        }
+    }
+
+    transition: 0.5s box-shadow cubic-bezier(0.075, 0.82, 0.165, 1);
+
+    &:focus-within {
+        box-shadow: 0 0px 0px 2px var(--gray-3);
+
+        input {
+            outline: none;
+        }
+    }
+}
+
+.input-file {
+    border-radius: 0.5rem 0 0 0.5rem;
+    cursor: pointer;
+}
+
+.input-file:focus-within,
+.input-status-button:focus {
+    background: var(--gray-2) !important;
+    outline: none;
+}
+
+
+.input-text {
+    display: flex;
+    width: 100%;
+
+    input {
+        padding: 0.5rem;
+        width: 100%;
+        color: var(--text);
+    }
+}
+
+
+
+.input-status {
+    display: flex;
+    aspect-ratio: 1;
+
+    button.input-status-button,
+    button.input-status-button:focus {
+        width: 100%;
+        padding: 0;
+        border-radius: 0 0.5rem 0.5rem 0rem;
+        background: none;
+    }
+
+    svg {
+        margin: auto 0.5rem;
+        height: 1.25em;
+        fill: var(--subtle);
+    }
+}
+
+
+.input-text:not(:is(.input-path *)) {
+    border: 1px solid var(--gray-2);
+    background-color: var(--gray-1);
+    border-radius: 0.5rem;
+    transition: 0.5s box-shadow cubic-bezier(0.075, 0.82, 0.165, 1);
+
+    &:focus-within {
+        box-shadow: 0 0px 0px 2px var(--gray-4);
+
+        input:focus {
+            outline: none;
+        }
+    }
 }

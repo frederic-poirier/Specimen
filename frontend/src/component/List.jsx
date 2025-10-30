@@ -2,7 +2,7 @@ import { createSignal, createMemo, onCleanup, onMount, For } from "solid-js";
 
 export default function List(props) {
     const [itemHeight, setItemHeight] = createSignal(100)
-    const [containerHeight, setContainerHeight] = createSignal(0)
+    const [containerHeight, setContainerHeight] = createSignal(100)
     const [scroll, setScroll] = createSignal(0)
     let containerREF
 
@@ -86,10 +86,7 @@ export default function List(props) {
                         );
                     }}
                 </For>
-
-
             </div>
-
         </div>
     )
 }
