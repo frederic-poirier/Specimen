@@ -73,7 +73,6 @@ export default function List(props) {
 
                         return (
                             <div
-                                class="virtual-list__item"
                                 style={{
                                     position: "absolute",
                                     top: `${top()}px`,

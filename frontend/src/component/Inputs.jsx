@@ -1,91 +1,93 @@
-import { createSignal, For } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
+import { FolderIcon, AlertIcon, CheckIcon, SearchIcon } from "../assets/icons";
 import "../styles/inputs.css"
 
-export function Tabs(props) {
-  const [selected, setSelected] = createSignal(props.initial || props.tabs[0]);
+export function useStatus(validator) {
+  const [status, setStatus] = createSignal({ value: "", valid: false, error: "empty" });
 
-  function handleSelect(tab) {
-    setSelected(tab);
-    props.onChange?.(tab);
-  }
+  let timeoutID;
+  const clear = () => timeoutID && clearTimeout(timeoutID);
+  const validate = (value) => {
+    clear();
+    const trimmed = (value ?? "").trim();
+    setStatus({ value: trimmed, valid: false, error: "pending" });
 
-  return (
-    <div className="tabs">
-      <For each={props.tabs}>
-        {(tab) => (
-          <label for={tab} className="tabs__option">
-            <input
-              type="radio"
-              name="tabs-group"
-              id={tab}
-              value={tab}
-              checked={selected() === tab}
-              onInput={(e) => handleSelect(e.currentTarget.value)}
-            />
-            {tab}
-          </label>
-        )}
-      </For>
-    </div>
-  );
-}
+    if (!trimmed) return setStatus({ value: "", valid: false, error: "empty" });
 
-import { Show } from "solid-js";
-import { CheckIcon, AlertIcon, FolderIcon } from "../assets/icons";
-
-export function InputText(props) {
-  return (
-    <label className="input-field">
-      <input
-        className="u-ghost-input"
-        type="text"
-        value={props.status().value}
-        placeholder={props.placeholder}
-        onInput={(e) => props.onInput(e.target.value)}
-        autoComplete="off"
-      />
-      <span className="input-field__status">
-        <Show when={props.status().valid}>
-          <CheckIcon />
-        </Show>
-        <Show when={!props.status().valid && props.status().error !== "empty"}>
-          <button type="button" className="input-field__status-button" popoverTarget="input-error">
-            <AlertIcon />
-          </button>
-          <span id="input-error" popover>
-            {props.status().error}
-          </span>
-        </Show>
-      </span>
-    </label >
-  );
-}
-
-
-export function InputPath(props) {
-  const handleFilePick = (e) => {
-    const [file] = e.target.files ?? [];
-    if (!file) return props.onInput("");
-    const parts = file.webkitRelativePath.split("/");
-    props.onInput("/" + (parts.length > 1 ? parts[0] : ""));
+    timeoutID = setTimeout(async () => {
+      try {
+        const result = await validator(trimmed);
+        setStatus({
+          value: trimmed,
+          valid: !!result.valid,
+          error: result.error || null,
+        });
+      } catch {
+        setStatus({ value: trimmed, valid: false, error: "Validation failed" });
+      }
+    }, 300);
   };
 
+  onCleanup(clear);
+  return { status, validate };
+}
+
+
+export function InputFile(props) {
+  const name = crypto.randomUUID()
   return (
-    <fieldset class="input-field input-field--path">
-      <label className="input-field__trigger">
-        <FolderIcon />
-        <input
-          type="file"
-          className="u-sr-only"
-          webkitdirectory
-          onInput={handleFilePick}
-        />
-      </label>
-      <InputText
-        placeholder={props.placeholder || "/users/fonts"}
-        status={props.status}
+    <label
+      htmlFor={name}
+      className="input-file focus-subtle"
+    >
+      <FolderIcon />
+      <input
+        id={name}
+        type="file"
+        className="input--invisible"
         onInput={props.onInput}
       />
-    </fieldset>
-  );
+    </label>
+  )
+}
+
+export function InputField(props) {
+  return (
+    <input
+      type={props.type}
+      placeholder={props.placeholder}
+      value={props.value ?? ""}
+      onInput={props.onInput}
+      className="input--ghost"
+    />
+  )
+}
+
+export function Status(props) {
+  return (
+    <span className="input-status focus-subtle">
+      <Show when={props.status().valid}>
+        <CheckIcon />
+      </Show>
+      <Show when={!props.status().valid && props.status().error !== "empty"}>
+        <AlertIcon tabindex={0} />
+        <span className="input-error">
+          {props.status().error}
+        </span>
+      </Show>
+    </span>
+  )
+}
+
+export function InputRoot(props) {
+  return (
+    <div className="input-container card focus-ring">
+      <Show when={props.icon}>
+        <span className="input-icon">
+          {props.icon}
+        </span>
+      </Show>
+      {props.children}
+    </div>
+  )
 }

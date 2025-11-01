@@ -21,6 +21,10 @@ export function useDirectory() {
     return { valid: data.valid, error: data.error };
   };
 
+  const postPath = async (path) => {
+    console.log(path)
+  }
+
   const delPath = async (id) => {
     const currentPaths = paths() ?? [];
     const index = currentPaths.findIndex((entry) => entry.id === id);
@@ -44,5 +48,5 @@ export function useDirectory() {
     }
   };
 
-  return { paths, validator, delPath };
+  return { paths, validator, delPath, postPath };
 }

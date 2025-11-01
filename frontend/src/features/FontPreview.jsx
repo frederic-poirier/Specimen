@@ -1,28 +1,27 @@
-import { createResource, createSignal, createMemo, onMount, onCleanup, Show, For, createRenderEffect, } from "solid-js";
+import { createResource, createSignal, createMemo, onMount, onCleanup, Show, For, createRenderEffect, from, createEffect, } from "solid-js";
 import { AlertIcon, DocumentSearchIcon, LoadingIcon, RemoveIcon } from "../assets/icons";
 import List from "../component/List";
-import { InputPath } from "../component/Inputs"
+import { InputField, InputRoot, InputFile, Status, useStatus } from '../component/Inputs'
 import { useDirectory } from "../utils/useDirectory"
-import { useValidation } from "../utils/useValidation";
 import "../styles/FontPreview.css"
 
 const loadedFonts = new Set();
 
-async function loadFont(font) {
-  if (!font || loadedFonts.has(font)) return;
+async function loadFont(url, name) {
+  if (!name || loadedFonts.has(name)) return;
   if (typeof document === "undefined" || typeof FontFace === "undefined") return;
   try {
-    if (document.fonts && document.fonts.check(`1em "${font}"`)) {
-      loadedFonts.add(font);
+    if (document.fonts && document.fonts.check(`1em "${name}"`)) {
+      loadedFonts.add(name);
     }
   } catch {
     throw new Error("pas de fetch")
   }
 
-  const face = new FontFace(font, `url(/api/fonts/${font.replaceAll(" ", "-")}.woff2)`);
+  const face = new FontFace(name, url);
   await face.load();
   document.fonts?.add(face);
-  loadedFonts.add(font);
+  loadedFonts.add(name);
 }
 
 async function fetchRepresentatives() {
@@ -62,25 +61,27 @@ export default function FontPreview() {
 
   function FontItem(props) {
     onMount(() => {
-      const timer = setTimeout(() => void loadFont(props.item.name), 50)
+      const name = props.item.name
+      const url = `url(/api/fonts/${name.replaceAll(" ", "-")}.woff2)`
+      const timer = setTimeout(() => void loadFont(url, name), 50)
       onCleanup(() => clearTimeout(timer))
     })
 
     return (
       <button
-        className="font-preview__item u-ghost-button"
-        popoverTarget="font-preview-modal"
+        className="btn--ghost font-item"
+        popoverTarget="font-modal"
         popoverTargetAction="show"
         onClick={() => setFamily({ id: props.item.id, name: props.item.name })}
       >
-        <p className="font-preview__meta">
-          <span className="font-preview__family-label">{props.item.name}</span>
-          <span className="font-preview__meta-format">
+        <p className="font-data">
+          <span className="family">{props.item.name}</span>
+          <span className="format">
             <For each={props.item.extensions}>
               {(extension) => <span>{extension}</span>}
             </For>
           </span>
-          <span className="font-preview__meta-counts">{props.item.font_count}</span>
+          <span className="counts">{props.item.font_count}</span>
         </p>
         <h1
           style={{
@@ -92,29 +93,45 @@ export default function FontPreview() {
   }
 
   function FontModal() {
+
+    createEffect(async () => {
+      const fonts = familyData();
+      if (!fonts?.length) return;
+
+      (async () => {
+        for (const font of fonts) {
+          const url = `url(/font?path=${encodeURI(font.path)}`
+          await loadFont(url, font.full_name);
+        }
+      })();
+    })
+
     return (
-      <section id="font-preview-modal" popover className="font-preview__modal">
-        <div className="font-preview__modal-content">
+      <section id="font-modal" popover className="modal">
+        <div className="font-modal-content">
           <header>
             <h5>{family()?.name}</h5>
-            <button popoverTarget="font-preview-modal" className="u-ghost-button">
+            <button popoverTarget="font-modal" className="btn btn--ghost">
               <RemoveIcon />
             </button>
           </header>
           <ul>
             <For each={familyData()}>
               {(font) =>
-                <li><h1 style={{ "font-family": family().name }}>{font.full_name}</h1></li>
+                < li >
+                  <h1 style={{ "font-family": family().name }}>{font.full_name}</h1>
+                </li>
+
               }
             </For>
           </ul>
         </div>
-      </section>
+      </section >
     )
   }
 
   return (
-    <section className="font-preview">
+    <section id="font-viewer">
       <Show when={!representatives.error} fallback={<ErrorPreview />}>
         <Show when={!representatives.loading} fallback={<LoadingPreview />}>
           <Show when={representatives().length !== 0} fallback={<EmptyPreview />}>
@@ -125,7 +142,7 @@ export default function FontPreview() {
             </Show>
             <input
               type="search"
-              className="font-preview__search"
+              id="font-search"
               placeholder="Search fonts..."
               onInput={(event) => handleQuery(event.currentTarget.value)}
             />
@@ -139,7 +156,7 @@ export default function FontPreview() {
 
 function LoadingPreview() {
   return (
-    <div className="status status--loading">
+    <div className="status loading">
       <LoadingIcon />
       <h5>Chargement des polices…</h5>
       <p>Les aperçus de polices sont en cours de préparation. Cette opération peut prendre quelques secondes.</p>
@@ -149,7 +166,7 @@ function LoadingPreview() {
 
 function ErrorPreview() {
   return (
-    <div className="status status--error">
+    <div className="status error">
       <AlertIcon />
       <h5>Échec du chargement des polices</h5>
       <p>Une erreur est survenue lors de la récupération des données. Vérifiez votre connexion ou réessayez plus tard.</p>
@@ -158,17 +175,15 @@ function ErrorPreview() {
 }
 
 function EmptyPreview() {
-  const { validator } = useDirectory();
-  const { status, validate } = useValidation(validator);
+  const { validator, postPath } = useDirectory()
+  const path = useStatus(validator)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!status().valid) return;
-    await fetch(`/scan/path?path=${encodeURIComponent(status().value)}`);
-  };
+  function handleSubmit() {
+    postPath(path.status().value)
+  }
 
   return (
-    <div className="status status--empty">
+    <div className="status empty">
       <h5>Aucune police détectée</h5>
       <p>
         Aucune source de polices n’a encore été ajoutée. Vous pouvez :
@@ -177,16 +192,33 @@ function EmptyPreview() {
         ou lancer une analyse automatique.
       </p>
 
-      <form onSubmit={handleSubmit} class="panel__manual">
-        <InputPath status={status} onInput={validate} />
-        <button type="submit" disabled={!status().valid}>Ajouter</button>
+      <form onSubmit={handleSubmit} class="directory-panel-manual">
+        <InputRoot>
+          <InputFile
+            onInput={(e) => path.validate(e.currentTarget.value)}
+          />
+          <hr />
+          <InputField
+            type="text"
+            value={path.status().value}
+            onInput={(e) => path.validate(e.currentTarget.value)}
+          />
+          <Status status={path.status} />
+        </InputRoot>
+        <button
+          className="btn"
+          type="submit"
+          disabled={!path.status().valid}
+        >
+          Ajouter
+        </button>
       </form>
 
-      <span className="status__separator"><span>ou</span></span>
+      <span className="or"><span>ou</span></span>
 
-      <button className="btn--full">
+      <button className="btn btn--full">
         <DocumentSearchIcon />
-        Analyser automatiquement
+        <span>Analyser automatiquement</span>
       </button>
     </div>
   );
@@ -194,7 +226,7 @@ function EmptyPreview() {
 
 function EmptySearch() {
   return (
-    <div className="status status--empty">
+    <div className="status empty">
       <h5>Aucune correspondance trouvée</h5>
       <p>
         Aucun résultat ne correspond à votre recherche. Essayez d’élargir vos critères

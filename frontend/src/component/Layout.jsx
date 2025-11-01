@@ -1,9 +1,10 @@
 import { createSignal } from "solid-js";
 import { AccountIcon, AddIcon, FolderIcon, SidebarIcon, SpecimenIcon } from "../assets/icons";
+import "../styles/layout.css"
 
 export default function Layout(props) {
     return (
-        <div className="layout">
+        <div className="main-container">
             <Sidebar />
             <main>
                 <Header />
@@ -28,25 +29,25 @@ function Sidebar() {
     const [sidebarStatus, setSidebarStatus] = createSignal(false)
 
     return (
-        <section className="layout__sidebar" aria-expanded={sidebarStatus()}>
-            <button className="u-ghost-button layout__sidebar-toggle" onClick={() => setSidebarStatus(!sidebarStatus())}>
+        <section className="sidebar" aria-expanded={sidebarStatus()}>
+            <button className="btn btn--ghost" onClick={() => setSidebarStatus(!sidebarStatus())}>
                 <SidebarIcon />
             </button>
-            <button className="u-ghost-button">
+            <button className="btn btn--ghost">
                 <FolderIcon />
                 <Show when={sidebarStatus()}><span>Dossier</span></Show>
             </button>
-            <button className="u-ghost-button">
+            <button className="btn btn--ghost">
                 <SpecimenIcon />
                 <Show when={sidebarStatus()}><span>Tester</span></Show>
 
             </button>
-            <button className="u-ghost-button">
+            <button className="btn btn--ghost">
                 <AddIcon />
                 <Show when={sidebarStatus()}><span>Ajouter</span></Show>
             </button>
 
-            <button className="u-ghost-button layout__sidebar-footer">
+            <button className="btn btn--ghost end">
                 <AccountIcon />
                 <Show when={sidebarStatus()}><span>Freddy</span></Show>
             </button>
