@@ -68,19 +68,19 @@ export default function FontPreview() {
 
     return (
       <button
-        className="ghost font-item"
-        popoverTarget="font-modal"
+        className="font-preview__item u-ghost-button"
+        popoverTarget="font-preview-modal"
         popoverTargetAction="show"
         onClick={() => setFamily({ id: props.item.id, name: props.item.name })}
       >
-        <p className="font-data">
-          <span className="family">{props.item.name}</span>
-          <span className="format">
+        <p className="font-preview__meta">
+          <span className="font-preview__family-label">{props.item.name}</span>
+          <span className="font-preview__meta-format">
             <For each={props.item.extensions}>
               {(extension) => <span>{extension}</span>}
             </For>
           </span>
-          <span className="counts">{props.item.font_count}</span>
+          <span className="font-preview__meta-counts">{props.item.font_count}</span>
         </p>
         <h1
           style={{
@@ -93,11 +93,11 @@ export default function FontPreview() {
 
   function FontModal() {
     return (
-      <section id="font-modal" popover className="modal">
-        <div className="font-modal-content">
+      <section id="font-preview-modal" popover className="font-preview__modal">
+        <div className="font-preview__modal-content">
           <header>
             <h5>{family()?.name}</h5>
-            <button popoverTarget="font-modal" className="ghost">
+            <button popoverTarget="font-preview-modal" className="u-ghost-button">
               <RemoveIcon />
             </button>
           </header>
@@ -114,7 +114,7 @@ export default function FontPreview() {
   }
 
   return (
-    <section id="font-viewer">
+    <section className="font-preview">
       <Show when={!representatives.error} fallback={<ErrorPreview />}>
         <Show when={!representatives.loading} fallback={<LoadingPreview />}>
           <Show when={representatives().length !== 0} fallback={<EmptyPreview />}>
@@ -125,7 +125,7 @@ export default function FontPreview() {
             </Show>
             <input
               type="search"
-              id="font-search"
+              className="font-preview__search"
               placeholder="Search fonts..."
               onInput={(event) => handleQuery(event.currentTarget.value)}
             />
@@ -139,7 +139,7 @@ export default function FontPreview() {
 
 function LoadingPreview() {
   return (
-    <div className="status loading">
+    <div className="status status--loading">
       <LoadingIcon />
       <h5>Chargement des polices…</h5>
       <p>Les aperçus de polices sont en cours de préparation. Cette opération peut prendre quelques secondes.</p>
@@ -149,7 +149,7 @@ function LoadingPreview() {
 
 function ErrorPreview() {
   return (
-    <div className="status error">
+    <div className="status status--error">
       <AlertIcon />
       <h5>Échec du chargement des polices</h5>
       <p>Une erreur est survenue lors de la récupération des données. Vérifiez votre connexion ou réessayez plus tard.</p>
@@ -168,7 +168,7 @@ function EmptyPreview() {
   };
 
   return (
-    <div className="status empty">
+    <div className="status status--empty">
       <h5>Aucune police détectée</h5>
       <p>
         Aucune source de polices n’a encore été ajoutée. Vous pouvez :
@@ -177,14 +177,14 @@ function EmptyPreview() {
         ou lancer une analyse automatique.
       </p>
 
-      <form onSubmit={handleSubmit} class="directory-panel-manual">
+      <form onSubmit={handleSubmit} class="panel__manual">
         <InputPath status={status} onInput={validate} />
         <button type="submit" disabled={!status().valid}>Ajouter</button>
       </form>
 
-      <span className="or"><span>ou</span></span>
+      <span className="status__separator"><span>ou</span></span>
 
-      <button className="full-width">
+      <button className="btn--full">
         <DocumentSearchIcon />
         Analyser automatiquement
       </button>
@@ -194,7 +194,7 @@ function EmptyPreview() {
 
 function EmptySearch() {
   return (
-    <div className="status empty">
+    <div className="status status--empty">
       <h5>Aucune correspondance trouvée</h5>
       <p>
         Aucun résultat ne correspond à votre recherche. Essayez d’élargir vos critères

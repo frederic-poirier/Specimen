@@ -189,7 +189,7 @@ svg {
 }
 
 /* ghost button */
-button.ghost {
+button.u-ghost-button {
   background: none;
   color: var(--gray-6);
 
@@ -232,7 +232,7 @@ button:has(> svg:only-child) {
   width: fit-content;
 }
 
-button.full-width {
+.btn--full {
   width: 100% !important;
   padding: 0.5rem !important;
   gap: 0.5rem;
@@ -272,11 +272,11 @@ main {
 }
 
 
-.main-container {
+.layout {
   display: flex;
 }
 
-.sidebar {
+.layout__sidebar {
   padding: 1rem 0.5rem;
   transition: 0.5s all cubic-bezier(0.075, 0.82, 0.165, 1);
   border-right: 1px solid var(--gray-1);
@@ -284,7 +284,7 @@ main {
   flex-direction: column;
   gap: 0.25rem;
 
-  .end {
+  .layout__sidebar-footer {
     margin-top: auto;
   }
 
@@ -310,13 +310,12 @@ main {
   }
 }
 
-
-
-.sidebar[aria-expanded="true"] {
+.layout__sidebar[aria-expanded="true"] {
   flex: 1 1 300px;
 }
 
-.status.error, .status.loading {
+.status--error,
+.status--loading {
   margin: auto;
   display: grid;
   align-items: center;
@@ -344,7 +343,7 @@ main {
   max-width: 40ch;
 }
 
-.status.empty {
+.status--empty {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -354,7 +353,7 @@ main {
     gap: 0.25rem;
   }
 
-  span.or {
+  .status__separator {
     width: 100%;
     text-align: center;
     position: relative;

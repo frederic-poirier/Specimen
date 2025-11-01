@@ -3,7 +3,7 @@ import { AccountIcon, AddIcon, FolderIcon, SidebarIcon, SpecimenIcon } from "../
 
 export default function Layout(props) {
     return (
-        <div className="main-container">
+        <div className="layout">
             <Sidebar />
             <main>
                 <Header />
@@ -28,25 +28,25 @@ function Sidebar() {
     const [sidebarStatus, setSidebarStatus] = createSignal(false)
 
     return (
-        <section className="sidebar" aria-expanded={sidebarStatus()}>
-            <button className="ghost" onClick={() => setSidebarStatus(!sidebarStatus())}>
+        <section className="layout__sidebar" aria-expanded={sidebarStatus()}>
+            <button className="u-ghost-button layout__sidebar-toggle" onClick={() => setSidebarStatus(!sidebarStatus())}>
                 <SidebarIcon />
             </button>
-            <button className="ghost">
+            <button className="u-ghost-button">
                 <FolderIcon />
                 <Show when={sidebarStatus()}><span>Dossier</span></Show>
             </button>
-            <button className="ghost">
+            <button className="u-ghost-button">
                 <SpecimenIcon />
                 <Show when={sidebarStatus()}><span>Tester</span></Show>
 
             </button>
-            <button className="ghost">
+            <button className="u-ghost-button">
                 <AddIcon />
                 <Show when={sidebarStatus()}><span>Ajouter</span></Show>
             </button>
 
-            <button className="ghost end">
+            <button className="u-ghost-button layout__sidebar-footer">
                 <AccountIcon />
                 <Show when={sidebarStatus()}><span>Freddy</span></Show>
             </button>

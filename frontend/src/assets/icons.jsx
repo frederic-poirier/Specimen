@@ -172,11 +172,11 @@ export function LoadingIcon(props) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <style>{`
-    .spinner_V8m1 {
+    .spinner {
       transform-origin: center;
       animation: spinner_zKoa 2s linear infinite;
     }
-    .spinner_V8m1 circle {
+    .spinner circle {
       stroke-linecap: round;
       animation: spinner_YpZS 1.5s ease-in-out infinite;
     }
@@ -189,7 +189,7 @@ export function LoadingIcon(props) {
       95%,100% { stroke-dasharray: 42 150; stroke-dashoffset: -59; }
     }
   `}</style>
-      <g className="spinner_V8m1">
+      <g className="spinner">
         <circle cx="12" cy="12" r="9.5" fill="none" strokeWidth="3" />
       </g>
     </svg>

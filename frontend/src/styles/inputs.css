@@ -1,16 +1,16 @@
-input.invisible {
+input.u-sr-only {
     width: 0;
     height: 0;
     position: absolute;
 }
 
-input.ghost,
-input.invisible {
+input.u-ghost-input,
+input.u-sr-only {
     border: none;
     background: none;
 }
 
-.tab-switch {
+.tabs {
     background-color: var(--gray-1);
     position: relative;
     display: flex;
@@ -18,7 +18,7 @@ input.invisible {
     border-radius: 0.75rem;
     width: 100%;
 
-    label {
+    .tabs__option {
         flex: 1 1 100%;
         padding: 0.25rem 0.5rem;
         text-align: center;
@@ -27,7 +27,7 @@ input.invisible {
     }
 }
 
-.tab-switch::after {
+.tabs::after {
     content: "";
     background-color: var(--gray-2);
     position: absolute;
@@ -39,16 +39,16 @@ input.invisible {
     transition: 0.25s transform cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
-.tab-switch:has(label:nth-child(2) input:checked)::after {
+.tabs:has(.tabs__option:nth-child(2) input:checked)::after {
     transform: translateX(calc(100% - 0.5rem));
 }
 
-.tab-switch:focus-within:after {
+.tabs:focus-within::after {
     outline: 2px solid var(--gray-6);
 }
 
 
-.input-path {
+.input-field--path {
     border: 1px solid var(--gray-2);
     background-color: var(--gray-1);
     padding: 0;
@@ -56,7 +56,7 @@ input.invisible {
     display: flex;
     width: 100%;
 
-    label:first-of-type {
+    .input-field__trigger {
         padding: 0.5rem;
         border-right: 1px solid var(--gray-2);
 
@@ -76,19 +76,19 @@ input.invisible {
     }
 }
 
-.input-file {
+.input-field__trigger {
     border-radius: 0.5rem 0 0 0.5rem;
     cursor: pointer;
 }
 
-.input-file:focus-within,
-.input-status-button:focus {
+.input-field__trigger:focus-within,
+.input-field__status-button:focus {
     background: var(--gray-2) !important;
     outline: none;
 }
 
 
-.input-text {
+.input-field {
     display: flex;
     width: 100%;
 
@@ -101,12 +101,12 @@ input.invisible {
 
 
 
-.input-status {
+.input-field__status {
     display: flex;
     aspect-ratio: 1;
 
-    button.input-status-button,
-    button.input-status-button:focus {
+    button.input-field__status-button,
+    button.input-field__status-button:focus {
         width: 100%;
         padding: 0;
         border-radius: 0 0.5rem 0.5rem 0rem;
@@ -121,7 +121,7 @@ input.invisible {
 }
 
 
-.input-text:not(:is(.input-path *)) {
+.input-field:not(:is(.input-field--path *)) {
     border: 1px solid var(--gray-2);
     background-color: var(--gray-1);
     border-radius: 0.5rem;

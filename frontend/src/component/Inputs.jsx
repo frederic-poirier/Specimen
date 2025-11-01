@@ -10,10 +10,10 @@ export function Tabs(props) {
   }
 
   return (
-    <div className="tab-switch">
+    <div className="tabs">
       <For each={props.tabs}>
         {(tab) => (
-          <label for={tab}>
+          <label for={tab} className="tabs__option">
             <input
               type="radio"
               name="tabs-group"
@@ -35,21 +35,21 @@ import { CheckIcon, AlertIcon, FolderIcon } from "../assets/icons";
 
 export function InputText(props) {
   return (
-    <label className="input-text">
+    <label className="input-field">
       <input
-        className="ghost"
+        className="u-ghost-input"
         type="text"
         value={props.status().value}
         placeholder={props.placeholder}
         onInput={(e) => props.onInput(e.target.value)}
         autoComplete="off"
       />
-      <span className="input-status">
+      <span className="input-field__status">
         <Show when={props.status().valid}>
           <CheckIcon />
         </Show>
         <Show when={!props.status().valid && props.status().error !== "empty"}>
-          <button type="button" className="input-status-button" popoverTarget="input-error">
+          <button type="button" className="input-field__status-button" popoverTarget="input-error">
             <AlertIcon />
           </button>
           <span id="input-error" popover>
@@ -71,12 +71,12 @@ export function InputPath(props) {
   };
 
   return (
-    <fieldset class="input-path">
-      <label className="input-file">
+    <fieldset class="input-field input-field--path">
+      <label className="input-field__trigger">
         <FolderIcon />
         <input
           type="file"
-          className="invisible"
+          className="u-sr-only"
           webkitdirectory
           onInput={handleFilePick}
         />

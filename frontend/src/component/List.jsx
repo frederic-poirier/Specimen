@@ -20,7 +20,7 @@ export default function List(props) {
         const resizeOBS = new ResizeObserver(([entry]) => {
             setContainerHeight(entry.contentRect.height);
             queueMicrotask(() => {
-                const firstItem = containerREF.querySelector(".list-item");
+                const firstItem = containerREF.querySelector(".virtual-list__item");
                 if (firstItem) {
                     const rect = firstItem.getBoundingClientRect();
                     if (rect.height > 0) setItemHeight(rect.height);
@@ -32,7 +32,7 @@ export default function List(props) {
         setContainerHeight(containerREF.clientHeight);
 
         requestAnimationFrame(() => {
-            const firstItem = containerREF.querySelector(".list-item");
+            const firstItem = containerREF.querySelector(".virtual-list__item");
             if (firstItem) {
 
                 const rect = firstItem.getBoundingClientRect();
@@ -73,7 +73,7 @@ export default function List(props) {
 
                         return (
                             <div
-                                class="list-item"
+                                class="virtual-list__item"
                                 style={{
                                     position: "absolute",
                                     top: `${top()}px`,
