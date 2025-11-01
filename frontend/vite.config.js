@@ -10,6 +10,10 @@ export default defineConfig({
         target: "http://localhost:8000", // backend FastAPI
         changeOrigin: true,
       },
+      "/font": {
+        target: "http://localhost:8000", // backend FastAPI
+        changeOrigin: true,
+      },
       "/fonts": {
         target: "http://localhost:8000", // backend FastAPI
         changeOrigin: true,

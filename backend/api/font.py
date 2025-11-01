@@ -57,5 +57,25 @@ def get_family(id, db: Session = Depends(get_db)):
 
 @router.get("/font")
 def get_local_font(path: str = Query(...)):
-    print("RAW path:", repr(path))
-    print("DECODED path:", Path(path).resolve())
+    # Remplacer les backslashes échappés en vrais chemins Windows
+    normalized_path = path.replace("\\", "/")
+    file = Path(normalized_path).resolve()
+
+    print("➡️ Fichier demandé:", file)
+
+    if not file.exists():
+        raise HTTPException(status_code=404, detail=f"Font not found: {file}")
+
+    if file.suffix.lower() not in [".ttf", ".otf", ".woff", ".woff2"]:
+        raise HTTPException(status_code=400, detail=f"Invalid font extension: {file.suffix}")
+
+    # Déterminer le bon type MIME
+    mime_map = {
+        ".ttf": "font/ttf",
+        ".otf": "font/otf",
+        ".woff": "font/woff",
+        ".woff2": "font/woff2"
+    }
+    media_type = mime_map[file.suffix.lower()]
+
+    return FileResponse(file, media_type=media_type)

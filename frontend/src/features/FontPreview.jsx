@@ -100,7 +100,7 @@ export default function FontPreview() {
 
       (async () => {
         for (const font of fonts) {
-          const url = `url(/font?path=${encodeURI(font.path)}`
+          const url = `url(/font?path=${encodeURIComponent(font.path)})`
           await loadFont(url, font.full_name);
         }
       })();
@@ -117,12 +117,13 @@ export default function FontPreview() {
           </header>
           <ul>
             <For each={familyData()}>
-              {(font) =>
-                < li >
-                  <h1 style={{ "font-family": family().name }}>{font.full_name}</h1>
+              {(font) => (
+                <li>
+                  <h1 style={{ "font-family": `"${font.full_name || family().name}"` }}>
+                    {font.full_name}
+                  </h1>
                 </li>
-
-              }
+              )}
             </For>
           </ul>
         </div>
